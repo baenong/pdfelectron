@@ -1,0 +1,256 @@
+@import "reset.css";
+@import "menu.css";
+@import "modal.css";
+
+@font-face {
+  font-family: "Pretendard";
+  src: url("./PretendardVariable.woff2") format("woff2");
+}
+
+html {
+  font-family: "Pretendard", sans-serif;
+  font-size: 16px;
+}
+
+body {
+  background-color: #f0f0f0;
+  margin: 0;
+  height: 100vh;
+  overflow-y: scroll;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+}
+
+main {
+  padding: 36px 0.25rem 0.25rem 0.25rem;
+  background-color: #555;
+}
+
+h1 {
+  color: #333;
+}
+
+button {
+  user-select: none;
+}
+
+/* PDF 뷰어 컨테이너 */
+#pdf-viewer-container {
+  border-radius: 10px;
+  background-color: #171717;
+  display: flex;
+  position: relative;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 120px);
+  margin-top: 10px;
+  margin-left: auto;
+  margin-right: auto;
+  overflow: hidden;
+  padding: 2px;
+}
+
+/* PDF 캔버스 기본 스타일 (선택 사항) */
+#pdf-canvas {
+  display: block;
+  background: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  width: 0px;
+  height: 0px;
+  z-index: 1;
+}
+
+#masking-canvas {
+  position: absolute;
+  width: 0px;
+  height: 0px;
+  z-index: 2;
+}
+
+#scroll-bar {
+  position: absolute;
+  width: 20px;
+  padding: 0 3px;
+  height: 100%;
+  right: 0;
+  top: 0;
+  z-index: 3;
+}
+
+#scroll-thumb-container {
+  height: calc(100vh - 156px);
+  margin: 19px 0;
+  position: relative;
+}
+
+#scroll-thumb {
+  border: 1px solid rgba(192, 192, 192, 0.5);
+  border-radius: 6px;
+  width: 12px;
+  position: absolute;
+  min-height: 16px;
+  right: 1px;
+  top: 0;
+  /* transition: top 0.2s ease; */
+}
+
+#scroll-thumb.hide {
+  display: none;
+}
+
+#scroll-thumb.dragging {
+  background-color: rgba(192, 192, 192);
+}
+
+#scroll-bar button {
+  background: none;
+  border: none;
+  filter: invert(80%);
+  padding: 2px 5px;
+  right: 0;
+  position: absolute;
+}
+
+#scroll-bar button img {
+  width: 12px;
+  height: 12px;
+}
+
+#prev-page-btn {
+  top: 0;
+}
+
+#next-page-btn {
+  bottom: 0;
+}
+
+/* 페이지 컨트롤 버튼 컨테이너 */
+#pdf-viewer-controls {
+  display: flex;
+  height: 32px;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0;
+  padding: 0 10px;
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+#function-controls,
+#page-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+#function-controls {
+  gap: 15px;
+}
+
+#function-controls div,
+#page-controls {
+  height: 100%;
+}
+
+#function-controls div {
+  padding: 5px 10px 3px 10px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  color: #ddd;
+  border: none;
+}
+
+#function-controls div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  background-color: #555;
+  padding: 5px;
+  gap: 5px;
+  position: relative;
+}
+
+#function-controls div:hover {
+  background-color: #777;
+}
+
+#function-controls div.disabled {
+  color: #777;
+}
+
+#function-controls div.disabled:hover {
+  background-color: #555;
+}
+
+#function-controls div.disabled img {
+  filter: invert(60%);
+}
+
+#function-controls img {
+  filter: invert(80%);
+}
+
+.tooltip {
+  transition: display 1s ease;
+}
+
+#pick-mask-color {
+  width: 16px;
+  height: 16px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: black;
+  border: none;
+}
+
+#mask-erase-btn.isused,
+#mask-box-btn.isused {
+  background-color: #777;
+  box-shadow: inset;
+}
+
+#page-info {
+  color: #ddd;
+}
+
+footer {
+  width: 100vw;
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  border: none;
+  background: #333;
+  height: 24px;
+}
+
+#messagebox {
+  font-size: 14px;
+  font-weight: 300;
+  color: red;
+  padding: 5px 15px;
+}
+
+@media screen and (max-width: 860px) {
+  .tooltip {
+    display: none;
+  }
+
+  #function-controls div:hover > span {
+    display: block;
+    position: absolute;
+    top: 26px;
+    left: 0;
+    width: 100px;
+    z-index: 3;
+  }
+
+  #search-count-container {
+    font-size: 1rem;
+  }
+}

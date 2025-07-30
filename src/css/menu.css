@@ -1,0 +1,132 @@
+/* 커스텀 타이틀바 스타일 */
+.titlebar {
+  height: 36px;
+  background: #333;
+  color: white;
+  display: flex;
+  align-items: center;
+  /* 드래그해서 창을 옮길 있도록 */
+  -webkit-app-region: drag;
+  position: fixed;
+  width: 100vw;
+}
+
+/* 메뉴 컨테이너 */
+.menu-container {
+  -webkit-app-region: no-drag;
+  display: flex;
+  font-size: 0.8rem;
+  font-weight: 300;
+  margin-left: 5px;
+}
+
+.menu-container button {
+  color: #aaa;
+  background: none;
+  padding: 3px 8px;
+  border: none;
+  border-radius: 4px;
+}
+
+/* 서브메뉴 */
+
+.modal-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: none;
+  z-index: 1000;
+}
+
+.submenu-container {
+  position: fixed;
+  background: #333;
+  color: #aaa;
+  border: 1px solid #aaa;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  font-weight: 300;
+  top: 30px;
+}
+
+.hide {
+  display: none;
+}
+
+.submenu-container li {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 20px;
+  margin: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.submenu-container li:hover {
+  background-color: #555;
+  color: #ccc;
+}
+
+.submenu-container li.disabled {
+  color: #777;
+}
+
+.submenu-container li.disabled:hover {
+  background: none;
+  color: #777;
+  cursor: default;
+}
+
+.submenu-container .menu-name {
+  margin-right: 40px;
+}
+
+#submenu-file {
+  left: 5px;
+}
+
+#submenu-edit {
+  left: 45px;
+}
+
+#submenu-setting {
+  left: 85px;
+}
+
+/* 창 조절 버튼 컨테이너 */
+.window-controls {
+  /* 드래그 가능 영역에서 버튼 부분만 제외 */
+  -webkit-app-region: no-drag;
+  margin-left: auto;
+}
+
+.window-controls button {
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
+  /* cursor: pointer; */
+}
+
+.window-controls button img {
+  width: 10px;
+  height: 10px;
+  filter: invert(100%);
+}
+
+.window-controls button:hover,
+.menu-container button:hover {
+  background: #555;
+}
+
+#close-btn:hover {
+  background: #e81123;
+}
+
+.divide-line {
+  height: 0;
+  border-bottom: 0.2px solid #aaa;
+  margin: 0 10px;
+}

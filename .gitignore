@@ -1,0 +1,6 @@
+node_modules/
+dist/
+src/ocr
+src/pdfjs
+src/css/PretendardVariable.woff2
+img/

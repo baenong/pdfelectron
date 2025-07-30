@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Insa PDF Tool</title>
+    <!-- <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    /> -->
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body>
+    <div class="titlebar">
+      <div class="menu-container">
+        <button class="menu-button" id="menu-file">파일</button>
+        <button class="menu-button" id="menu-edit">편집</button>
+        <button class="menu-button" id="menu-setting">설정</button>
+        <button class="menu-button" id="menu-help">도움말</button>
+      </div>
+      <div class="window-controls">
+        <button id="minimize-btn">
+          <img id="minimize-img" src="../img/ui-minimize.png" />
+        </button>
+        <button id="maximize-btn">
+          <img id="maximize-img" src="../img/ui-maximize.png" />
+        </button>
+        <button id="close-btn">
+          <img id="close-img" src="../img/ui-close.png" />
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-wrapper hide" id="wrapper-file">
+      <ul class="submenu-container" id="submenu-file">
+        <input type="file" class="hide" id="open-pdf" accept=".pdf" multiple />
+        <label id="open-pdf-label" for="open-pdf">
+          <li id="open-pdf-btn">
+            <div class="menu-name">열기</div>
+            <div class="short-cut">Ctrl+O</div>
+          </li>
+        </label>
+        <li id="save-pdf-btn" class="disabled">
+          <div class="menu-name">다른이름으로 저장</div>
+          <div class="short-cut">Ctrl+S</div>
+        </li>
+        <!-- <li id="encrypt-pdf-btn" class="disabled">
+          <div class="menu-name">암호화하여 다른이름으로 저장</div>
+          <div class="short-cut">Ctrl+Alt+S</div>
+        </li> -->
+      </ul>
+    </div>
+
+    <div class="modal-wrapper hide" id="wrapper-edit">
+      <ul class="submenu-container" id="submenu-edit">
+        <li id="undo-btn" class="disabled">
+          <div class="menu-name">되돌리기</div>
+          <div class="short-cut">Ctrl+Z</div>
+        </li>
+        <li id="redo-btn" class="disabled">
+          <div class="menu-name">다시실행</div>
+          <div class="short-cut">Ctrl+Y</div>
+        </li>
+        <div class="divide-line"></div>
+        <li id="ocr-btn" class="disabled">
+          <div class="menu-name">개인정보 전체탐색</div>
+          <div class="short-cut">Ctrl+F</div>
+        </li>
+        <li id="reset-all-btn" class="disabled">
+          <div class="menu-name">전체 마스킹 초기화</div>
+          <div class="short-cut">Ctrl+R</div>
+        </li>
+        <li id="extract-select-btn" class="disabled">
+          <div class="menu-name">특정페이지 추출</div>
+          <div class="short-cut">Ctrl+E</div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="modal-wrapper hide" id="wrapper-setting">
+      <ul class="submenu-container" id="submenu-setting">
+        <li id="regex-btn">
+          <div class="menu-name">키워드 관리</div>
+        </li>
+        <li id="regex-clear-btn">
+          <div class="menu-name">키워드 초기화</div>
+        </li>
+      </ul>
+    </div>
+
+    <main>
+      <div id="pdf-viewer-controls">
+        <div id="function-controls">
+          <div id="ocr-this-page" class="disabled">
+            <img class="func-img" src="../img/ui-search.png" />
+            <span class="tooltip">개인정보탐색</span>
+          </div>
+          <div id="mask-box-btn" class="isused">
+            <img class="func-img" src="../img/ui-masking.png" />
+            <span class="tooltip">마스킹</span>
+          </div>
+          <div id="mask-box-option">
+            <input id="isblur" type="checkbox" />
+            <label for="isblur">블러</label>
+            <input id="pick-mask-color" type="color" value="#000000" />
+            <label for="pick-mask-color">마스크 색</label>
+          </div>
+          <div id="mask-erase-btn" class="disabled">
+            <img class="func-img" src="../img/ui-eraser.png" />
+            <span class="tooltip">지우개</span>
+          </div>
+          <div id="reset-btn" class="disabled">
+            <img class="func-img" src="../img/ui-reset.png" />
+            <span class="tooltip">초기화</span>
+          </div>
+          <div id="extract-btn" class="disabled">
+            <img class="func-img" src="../img/ui-extract.png" />
+            <span class="tooltip">추출</span>
+          </div>
+          <div id="undo-btn-icon" class="disabled">
+            <img class="func-img" src="../img/ui-undo.png" />
+            <span class="tooltip">되돌리기</span>
+          </div>
+          <div id="redo-btn-icon" class="disabled">
+            <img class="func-img" src="../img/ui-redo.png" />
+            <span class="tooltip">다시실행</span>
+          </div>
+        </div>
+
+        <div id="page-controls">
+          <span id="page-info">- / -</span>
+        </div>
+      </div>
+
+      <!-- PDF 파일 뷰어 -->
+      <div id="pdf-viewer-container">
+        <canvas id="pdf-canvas"></canvas>
+        <canvas id="masking-canvas"></canvas>
+        <div id="scroll-bar">
+          <button id="prev-page-btn" disabled>
+            <img src="../img/ui-uparrow.png" />
+          </button>
+          <div id="scroll-thumb-container">
+            <div id="scroll-thumb" class="hide"></div>
+          </div>
+          <button id="next-page-btn" disabled>
+            <img src="../img/ui-downarrow.png" />
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div id="messagebox"></div>
+    </footer>
+
+    <div id="working-modal" class="hide">
+      <div id="working-modal-content">
+        <div id="brightness-container">
+          <img id="brightness" />
+        </div>
+        <div id="search-count-container">
+          <div id="search-count"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="extract-modal" class="hide">
+      <div id="extract-modal-content">
+        <div id="extract-modal-title">페이지 추출</div>
+        <div id="extract-modal-sub">
+          1, 2, 3처럼 페이지를 지정해 추출합니다.
+        </div>
+        <input
+          type="text"
+          name="extract-pages"
+          id="extract-pages"
+          placeholder="추출할 페이지를 선택해주세요"
+        />
+        <div id="extract-modal-buttons">
+          <button id="extract-ok">확인</button>
+          <button id="extract-cancel">닫기</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="regex-modal" class="hide">
+      <div id="regex-modal-content">
+        <ul id="regex-key-list"></ul>
+        <div id="regex-input">
+          <div>명칭</div>
+          <input
+            type="text"
+            name="regex-key"
+            id="regex-key"
+            placeholder="명칭"
+          />
+          <div>탐색할 문자</div>
+          <input
+            type="text"
+            name="regex-value"
+            id="regex-value"
+            placeholder="정규식"
+          />
+          <div id="regex-modal-buttons">
+            <button id="regex-ok">반영</button>
+            <button id="regex-cancel">닫기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="help-modal" class="hide">
+      <div id="help-modal-content">
+        <div id="help-modal-close">
+          <img class="func-img" src="../img/ui-close.png" />
+        </div>
+        <div id="help-modal-text">
+          <div class="help-modal-paragraph">
+            <div class="help-modal-title">1. 페이지 제어 기능</div>
+            <p>
+              뷰어 상단의 기능 버튼들은 기본적으로 현재 보고 있는 페이지에
+              대해서 작업을 수행합니다.
+            </p>
+            <p>
+              <img
+                class="help-modal-img"
+                src="../img/ui-search.png"
+              />(개인정보탐색) : 현재 페이지 내 개인정보를 탐색합니다.
+            </p>
+            <p>
+              기본적으로 주민등록번호, 전화번호가 세팅되어 있으며 추가하려면
+              상단 [설정]-[키워드 관리]에서 추가하면 됩니다. 혹시 미리 세팅된
+              주민등록번호나 전화번호 정규식을 지운 경우 다음 정규식을
+              추가하시면 됩니다.
+            </p>
+            <p>
+              주민등록번호 :
+              \\d{2}([0]\\d|[1][0-2])([0][1-9]|[1-2]\\d|[3][0-1])[-]*[1-4]\\d{6}
+            </p>
+            <p>전화번호 : 0\\d{2}-?\\d{3,4}-?d{4}</p>
+            <p>
+              <img class="help-modal-img" src="../img/ui-masking.png" />(수동
+              마스킹) 선택 후 PDF에 드래그해서 마스크 박스를 추가할 수 있습니다.
+            </p>
+            <p>
+              <img class="help-modal-img" src="../img/ui-eraser.png" />(마스킹
+              지우개) 선택 후 PDF에 드래그해서 범위 내의 마스크 박스를 지울 수
+              있습니다.
+            </p>
+            <p>
+              <img class="help-modal-img" src="../img/ui-reset.png" />(초기화)
+              현재 페이지의 마스크 박스를 초기화합니다.
+            </p>
+            <p>
+              <img class="help-modal-img" src="../img/ui-extract.png" />(추출)
+              현재 페이지를 추출합니다.
+            </p>
+          </div>
+          <div class="help-modal-paragraph">
+            <div class="help-modal-title">2. 전체 페이지 관련 기능</div>
+            <p>
+              [파일], [편집] 등 상단의 메뉴들은 전체 페이지에 연관된
+              기능들입니다.
+            </p>
+            <p>
+              [파일]의 열기를 통해 여러 PDF 파일을 선택해 병합을 수행할 수
+              있습니다.
+            </p>
+            <p>
+              [편집]의 개인정보 전체탐색은 전체 페이지를 대상으로 탐색합니다.
+            </p>
+            <p>[편집]의 특정페이지 추출은 입력한 페이지들을 추출합니다.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="./ocr/worker.min.js"></script>
+    <script src="./ocr/tesseract.min.js"></script>
+    <script src="./pdfjs/pdf-lib.min.js"></script>
+    <script src="./render.js" type="module"></script>
+    <script src="./utils/shortCut.js" type="module"></script>
+  </body>
+</html>

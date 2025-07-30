@@ -1,0 +1,252 @@
+#help-modal,
+#regex-modal,
+#extract-modal,
+#working-modal {
+  position: fixed;
+  background: rgba(0, 0, 0, 0.7);
+  height: calc(100vh - 60px);
+  width: 100vw;
+  top: 36px;
+  left: 0;
+  z-index: 10;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#help-modal.hide,
+#regex-modal.hide,
+#extract-modal.hide,
+#working-modal.hide {
+  display: none;
+}
+
+#regex-modal-content {
+  display: flex;
+  justify-content: center;
+  border: 1px;
+  border-radius: 5px;
+  background: #aaa;
+  padding: 10px;
+}
+
+#help-modal-content {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  padding: 10px;
+  margin: 0 10px;
+  color: white;
+}
+
+#help-modal-close {
+  display: flex;
+  justify-content: flex-end;
+}
+
+#help-modal-close img {
+  cursor: pointer;
+  filter: invert(80%);
+}
+
+.help-modal-paragraph {
+  margin-bottom: 20px;
+}
+
+#help-modal-text {
+  padding: 10px;
+}
+
+#help-modal-text p {
+  font-size: 1rem;
+  font-weight: 100;
+  margin: 10px 0;
+  line-height: 1.3rem;
+}
+
+#help-modal-text p img {
+  filter: invert(70%);
+  margin-right: 5px;
+}
+
+.help-modal-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 10px 0;
+}
+
+#regex-key-list {
+  padding: 10px 15px 10px 5px;
+  display: flex;
+  flex-direction: column;
+  width: 40vw;
+  height: 100%;
+  gap: 3px;
+  font-size: 0.9rem;
+  font-weight: 300;
+}
+
+#regex-key-list li {
+  display: flex;
+  gap: 5px;
+  justify-content: space-between;
+}
+
+#regex-key-list li:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.regex-key-value {
+  width: 96px;
+}
+
+.regex-list-value {
+  display: flex;
+  flex-grow: 1;
+}
+
+.regex-list-value span {
+  width: calc(40vw - 146px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.regex-row-delete {
+  margin-left: 10px;
+}
+
+.regex-row-delete:hover {
+  cursor: pointer;
+}
+
+#regex-input {
+  display: flex;
+  flex-direction: column;
+  width: 40vw;
+  font-size: 0.9rem;
+  padding: 10px 5px 10px 15px;
+  border-left: 1px solid gray;
+}
+
+#extract-modal-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  border: 1px;
+  border-radius: 5px;
+  gap: 10px;
+  padding: 20px;
+  background-color: #aaa;
+}
+
+#extract-modal-title {
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin-bottom: 15px;
+}
+
+#extract-modal-sub {
+  font-size: 0.9rem;
+  font-weight: 300;
+}
+
+#regex-modal-content input,
+#extract-pages {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 5px;
+  margin: 10px 0;
+  border: 1px;
+  border-radius: 5px;
+}
+
+#regex-modal-buttons {
+  margin-top: 10px;
+}
+
+#regex-modal-buttons,
+#extract-modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+#regex-modal-buttons button,
+#extract-modal-buttons button {
+  padding: 8px 20px;
+  user-select: none;
+  border: 1px;
+  border-radius: 5px;
+  color: whitesmoke;
+  font-weight: 500;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+#regex-ok,
+#extract-ok {
+  background-color: red;
+}
+
+#regex-ok:hover,
+#extract-ok:hover {
+  background-color: rgb(255, 128, 128);
+}
+
+#regex-cancel,
+#extract-cancel {
+  background-color: gray;
+}
+
+#regex-cancel:hover,
+#extract-cancel:hover {
+  background-color: rgb(192, 192, 192);
+}
+
+#working-modal-content {
+  width: 60vw;
+  height: 50vw;
+  max-width: 420px;
+  max-height: 350px;
+  padding: 0px 2rem;
+  background-color: aliceblue;
+  border-radius: 10px;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+  user-select: none;
+}
+
+#brightness-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 80%;
+}
+
+#brightness {
+  animation: brightnessAnimation 1.5s infinite;
+  height: 85%;
+}
+
+#search-count-container {
+  display: flex;
+  font-size: 1.2rem;
+  font-weight: 300;
+  width: 100%;
+  justify-content: center;
+}
+
+@keyframes brightnessAnimation {
+  0% {
+    content: url("../../img/brightness-stand.png");
+  }
+  50% {
+    content: url("../../img/brightness-seat.png");
+  }
+  100% {
+    content: url("../../img/brightness-stand.png");
+  }
+}

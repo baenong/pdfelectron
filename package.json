@@ -1,0 +1,56 @@
+{
+  "name": "pdfelectron",
+  "version": "1.0.2",
+  "description": "light PDF management program",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "electron-builder --windows nsis:ia32",
+    "build:portable": "electron-builder --windows portable"
+  },
+  "keywords": [],
+  "author": "Baenong",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^37.1.0",
+    "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "electron-store": "^10.1.0"
+  },
+  "build": {
+    "productName": "InsaPDF",
+    "appId": "com.electron.hello",
+    "asar": true,
+    "protocols": {
+      "name": "pdfelectron",
+      "schemes": [
+        "pdfelectron"
+      ]
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ],
+      "icon": "./img/brightness-stand.ico"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ]
+    }
+  },
+  "type": "module"
+}
