@@ -7,7 +7,7 @@
     "start": "electron .",
     "test": "echo \"Error: no test specified\" && exit 1",
     "deploy": "electron-builder --windows nsis:ia32",
-    "build:portable": "electron-builder --windows portable"
+    "build": "electron-builder --windows portable"
   },
   "keywords": [],
   "author": "Baenong",

@@ -1,5 +1,4 @@
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
-import { fileURLToPath } from "url";
 import { join } from "path";
 import Store from "electron-store";
 import { writeFile } from "fs/promises";
@@ -13,7 +12,6 @@ const store = new Store({
 const createWindow = () => {
   // const dirname = fileURLToPath(new URL(".", import.meta.url));
   const dirname = join(app.getAppPath(), "src");
-  console.log(dirname);
   const mainWindow = new BrowserWindow({
     width: 1024,
     height: 960,
@@ -31,9 +29,12 @@ const createWindow = () => {
     },
   });
 
+  mainWindow.loadFile(join(dirname, "index.html")).catch((error) => {
+    console.error("Error loading main window:", error);
+    app.quit();
+  });
   // 디버깅 시 사용할 개발자 도구
   // mainWindow.webContents.openDevTools();
-  mainWindow.loadFile(join(dirname, "index.html"));
 };
 
 // 'window-control' 채널에서 메시지를 수신 대기

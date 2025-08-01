@@ -1,5 +1,6 @@
 node_modules/
 dist/
+build/
 src/ocr
 src/pdfjs
 src/css/PretendardVariable.woff2

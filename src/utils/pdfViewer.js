@@ -98,7 +98,6 @@ export async function renderPage(pageNum) {
       });
     } catch (error) {
       setMessage(`페이지 ${pageNum}를 렌더링하는 데 실패했습니다.`);
-      console.log(error);
 
       pdfCanvas.style.width = "";
       pdfCanvas.style.height = "";

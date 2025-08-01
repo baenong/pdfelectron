@@ -223,6 +223,52 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.addEventListener("mousemove", (event) => mouseMoveOutCanvas(event));
   document.addEventListener("mouseup", (event) => mouseUpOutCanvas(event));
 
+  // 단축키 ---------------------------------------------------------------------
+  document.addEventListener("keydown", (event) => {
+    const activeId = document.activeElement.id;
+
+    // 입력받는 곳은 keydown event 제외
+    if (
+      activeId === "extract-pages" ||
+      activeId === "regex-key" ||
+      activeId === "regex-value"
+    )
+      return;
+
+    if (!event.ctrlKey) return;
+
+    const pdfDoc = getPdfDoc();
+    if (!(event.code === "KeyO" || pdfDoc)) return;
+
+    event.preventDefault();
+
+    switch (event.code) {
+      case "KeyO":
+        document.getElementById("open-pdf-label").click();
+        break;
+      case "KeyS":
+        saveMaskedPdf();
+        break;
+      case "KeyZ":
+        Undo();
+        break;
+      case "KeyY":
+        Redo();
+        break;
+      case "KeyR":
+        clearAllMasks();
+        endTask();
+        break;
+      case "KeyF":
+        runAllOCR();
+        break;
+      case "KeyE":
+        hideElement(wrapperEdit);
+        showElement(extractModal);
+        break;
+    }
+  });
+
   // --- PDF 뷰어 및 페이지 네비게이션 기능 초기화 ---
   fetchAll();
   setupPdfLoading();
