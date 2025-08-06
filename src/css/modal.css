@@ -31,12 +31,15 @@
   padding: 10px;
 }
 
+#help-modal::-webkit-scrollbar {
+  display: none;
+}
+
 #help-modal-content {
   display: flex;
   justify-content: center;
   flex-direction: column;
-  padding: 10px;
-  margin: 0 10px;
+  margin: 0 2rem;
   color: white;
 }
 
@@ -50,24 +53,43 @@
   filter: invert(80%);
 }
 
-.help-modal-paragraph {
-  margin-bottom: 20px;
-}
-
 #help-modal-text {
   padding: 10px;
+  overflow-y: scroll;
+  margin-top: 1rem;
+  height: 80vh;
 }
 
-#help-modal-text p {
+#help-modal-text::-webkit-scrollbar {
+  display: none;
+}
+
+.help-modal-paragraph {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.help-text {
   font-size: 1rem;
   font-weight: 100;
-  margin: 10px 0;
   line-height: 1.3rem;
 }
 
-#help-modal-text p img {
+.help-modal-img {
+  background: white;
   filter: invert(70%);
+  vertical-align: middle;
+  padding: 2px;
+  border: 1px solid black;
+  border-radius: 3px;
   margin-right: 5px;
+}
+
+.help-img {
+  height: 180px;
+  vertical-align: middle;
 }
 
 .help-modal-title {

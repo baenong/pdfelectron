@@ -61,6 +61,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const regexModal = document.getElementById("regex-modal");
   const helpModal = document.getElementById("help-modal");
 
+  // click 이벤트 모음
   document.addEventListener("click", (event) => {
     let targetId = event.target.id;
     resetMessage();
@@ -73,6 +74,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     ) {
       targetId = event.target.parentElement.id;
     }
+
+    hideElement(extractModal);
+    hideElement(regexModal);
+    hideElement(helpModal);
 
     switch (targetId) {
       case "minimize-btn":
