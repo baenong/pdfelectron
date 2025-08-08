@@ -25,8 +25,8 @@ export function displayWorkingModal() {
   else return;
 
   cntPrivacy = 0;
-  ocrProgress.style.width = "0%"; // 프로그레스 바 초기화
-  ocrProgressText.innerText = "OCR 준비 중..."; // 텍스트 초기화
+  ocrProgress.style.width = "0%";
+  ocrProgressText.innerText = "OCR 준비 중...";
 }
 
 export function hideWorkingModal() {
@@ -108,33 +108,75 @@ export async function runOCR(pageNum) {
   if (pageTexts.length > 0) {
     const canvasHeight = document.getElementById("masking-canvas").height;
 
+    const lines = [];
+    let currentLine = [];
+    let lastY = -1;
+    const Y_TOLERANCE = 1;
+
+    pageTexts.sort(
+      (a, b) =>
+        a.transform[5] - b.transform[5] || a.transform[4] - b.transform[4]
+    );
+
     for (const textItem of pageTexts) {
-      const noGap = textItem.text.replaceAll(" ", "");
+      const currentY = textItem.transform[5];
+      if (lastY === -1 || Math.abs(currentY - lastY) <= Y_TOLERANCE) {
+        currentLine.push(textItem);
+      } else {
+        lines.push(currentLine);
+        currentLine = [textItem];
+      }
+      lastY = currentY;
+    }
+
+    if (currentLine.length > 0) lines.push(currentLine);
+
+    for (const line of lines) {
+      const combinedText = line.map((item) => item.text).join("");
 
       for (const { regex } of regexExps) {
         let match;
         regex.lastIndex = 0;
 
-        while ((match = regex.exec(noGap)) !== null) {
+        while ((match = regex.exec(combinedText)) !== null) {
           const matchedText = match[0];
-          const textLen = textItem.text.length;
-          const charWidth = textItem.width / textLen;
+          const matchedIdx = match.index;
           const matchedLen = matchedText.length;
 
-          const bbox = textItem.transform;
-          const x = (bbox[4] + charWidth * match.index) * INITIAL_RENDER_SCALE;
-          const y =
-            canvasHeight - (bbox[5] + textItem.height) * INITIAL_RENDER_SCALE;
+          let currLen = 0;
+          let minX = Infinity;
+          let minY = Infinity;
+          let maxX = -Infinity;
+          let maxY = -Infinity;
 
-          const maskWidth = charWidth * matchedLen * INITIAL_RENDER_SCALE;
-          const maskHeight = textItem.height * INITIAL_RENDER_SCALE;
+          for (const word of line) {
+            const text = word.text;
+            const len = text.length;
+            if (
+              matchedIdx + matchedLen > currLen &&
+              matchedIdx < currLen + len
+            ) {
+              const startIdx = Math.max(0, matchedIdx - currLen);
+              const endIdx = Math.min(len, matchedIdx - currLen + matchedLen);
+
+              const charWidth = word.width / len;
+              const currentX = word.transform[4] + startIdx * charWidth;
+              const currentWidth = (endIdx - startIdx) * charWidth;
+
+              minX = Math.min(minX, currentX);
+              minY = Math.min(minY, word.transform[5]);
+              maxX = Math.max(maxX, currentX + currentWidth);
+              maxY = Math.max(maxY, word.transform[5] + word.height);
+            }
+            currLen += len;
+          }
 
           cntPrivacy += 1;
           addMask(pageNum, {
-            x: x,
-            y: y,
-            width: maskWidth,
-            height: maskHeight,
+            x: (minX + 1) * INITIAL_RENDER_SCALE,
+            y: canvasHeight - maxY * INITIAL_RENDER_SCALE,
+            width: (maxX - minX - 1) * INITIAL_RENDER_SCALE,
+            height: (maxY - minY) * INITIAL_RENDER_SCALE,
             color: "rgba(255, 0, 0, 0.5)",
             kind: "ocr",
           });

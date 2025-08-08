@@ -245,11 +245,11 @@ export function setupPdfLoading() {
       pdfDoc = await pdfjsLib.getDocument({ data: mergedPdfBytes }).promise;
       await extractTextContent();
 
-      setThumbHeight();
       clearAllStoredMasks();
       renderPage(1);
       adjustCanvasSize();
       activeButtons();
+      setThumbHeight();
       moveScroll(1);
     } catch (error) {
       setMessage("PDF 파일을 로드하는 데 실패했습니다.");

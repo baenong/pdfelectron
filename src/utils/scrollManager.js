@@ -1,4 +1,4 @@
-import { showElement, throttle } from "./domHelpers.js";
+import { hideElement, showElement, throttle } from "./domHelpers.js";
 import { movePage } from "./pageNavigation.js";
 import { getCurrentPageNum, getNumPages, renderPage } from "./pdfViewer.js";
 
@@ -24,6 +24,8 @@ export function setThumbHeight() {
     thumb.style.height = `${thumbHeight}px`;
     currentTop = 0;
     lowerBound = maxHeight - thumbHeight;
+  } else {
+    hideElement(thumb);
   }
 }
 

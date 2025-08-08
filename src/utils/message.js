@@ -1,6 +1,6 @@
 const messageBox = document.getElementById("messagebox");
 
-export function setMessage(content, bgColor = "#333333", color = "#dddddd") {
+export function setMessage(content, bgColor = "red", color = "#dddddd") {
   messageBox.innerText = content;
   messageBox.style.backgroundColor = bgColor;
   messageBox.style.color = color;
