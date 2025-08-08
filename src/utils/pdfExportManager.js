@@ -131,12 +131,24 @@ export async function saveCurrentPage() {
 async function savePdf(pdfBytes) {
   const defaultFileName = "document.pdf";
   const saved = await window.api.saveFile(pdfBytes, defaultFileName);
-
   if (saved) {
-    setMessage("저장되었습니다.", "gold");
+    setMessage("저장되었습니다.", "#2FBB4F", "#2B3137");
   } else {
-    setMessage("저장에 실패했거나 최소되었습니다.", "red");
+    setMessage(
+      "오류가 발생했습니다. 파일이 열려있거나 경로가 잘못되었을 수 있습니다.",
+      "#F0440A"
+    );
   }
+}
+
+function convertSourceInfo(maskInfo) {
+  const scale = RENDER_SCALE / INITIAL_RENDER_SCALE;
+  const sx = (maskInfo.x - 5) * scale;
+  const sy = (maskInfo.y - 5) * scale;
+  const sw = (maskInfo.width + 10) * scale;
+  const sh = (maskInfo.height + 15) * scale;
+
+  return { sx, sy, sw, sh };
 }
 
 async function getPngByPageNum(pdfDoc, pageNum) {
@@ -162,13 +174,61 @@ async function getPngByPageNum(pdfDoc, pageNum) {
   const scale = RENDER_SCALE / INITIAL_RENDER_SCALE;
 
   if (masks && masks.length > 0) {
-    masks.forEach((maskInfo) => {
-      const sx = (maskInfo.x - 5) * scale;
-      const sy = (maskInfo.y - 5) * scale;
-      const sw = (maskInfo.width + 10) * scale;
-      const sh = (maskInfo.height + 15) * scale;
+    const blurMasks = masks.filter((mask) => mask.isBlur);
+    const boxMasks = masks.filter((mask) => !mask.isBlur);
 
-      if (maskInfo.isBlur) {
+    if (blurMasks.length > 0) {
+      const opencvLoaded =
+        typeof cv !== "undefined" && typeof cv.imread === "function";
+
+      if (opencvLoaded) {
+        const src = cv.imread(tempCanvas);
+        blurMasks.forEach((maskInfo) => {
+          const { sx, sy, sw, sh } = convertSourceInfo(maskInfo);
+
+          const rect = new cv.Rect(sx, sy, sw, sh);
+          const roi = src.roi(rect);
+
+          // const smallSize = new cv.Size(sw / 20, sh / 20);
+          // const smallImg = new cv.Mat();
+          // cv.resize(roi, smallImg, smallSize, 0, 0, cv.INTER_AREA);
+
+          // const enlargedImg = new cv.Mat();
+          // cv.resize(
+          //   smallImg,
+          //   enlargedImg,
+          //   new cv.Size(rect.width, rect.height),
+          //   0,
+          //   0,
+          //   cv.INTER_AREA
+          // );
+          // enlargedImg.copyTo(roi);
+          // smallImg.delete();
+          // enlargedImg.delete();
+
+          const blur = new cv.Mat();
+
+          const intHeight = Math.floor(sh * 1.5);
+          const gaussian = intHeight % 2 === 0 ? intHeight + 1 : intHeight;
+
+          cv.GaussianBlur(
+            roi,
+            blur,
+            new cv.Size(gaussian, gaussian),
+            0,
+            0,
+            cv.BORDER_DEFAULT
+          );
+          blur.copyTo(roi);
+          blur.delete();
+
+          roi.delete();
+        });
+        cv.imshow(tempCanvas, src);
+        src.delete();
+      } else {
+        const { sx, sy, sw, sh } = convertSourceInfo(maskInfo);
+
         const blurCanvas = document.createElement("canvas");
         const blurCtx = blurCanvas.getContext("2d");
 
@@ -188,14 +248,18 @@ async function getPngByPageNum(pdfDoc, pageNum) {
         blurCtx.filter = "none";
 
         tempCtx.drawImage(blurCanvas, retouch, retouch, sw, sh, sx, sy, sw, sh);
-      } else {
-        const { r, g, b } = maskInfo.color
-          ? maskInfo.color
-          : { r: 0, g: 0, b: 0 };
-
-        tempCtx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-        tempCtx.fillRect(sx, sy, sw, sh);
       }
+    }
+
+    boxMasks.forEach((maskInfo) => {
+      const { sx, sy, sw, sh } = convertSourceInfo(maskInfo);
+
+      const { r, g, b } = maskInfo.color
+        ? maskInfo.color
+        : { r: 0, g: 0, b: 0 };
+
+      tempCtx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+      tempCtx.fillRect(sx, sy, sw, sh);
     });
   }
 

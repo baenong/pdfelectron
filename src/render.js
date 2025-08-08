@@ -214,6 +214,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       incMaskingCount();
       displayWorkingModal();
+      const ocrProgress = document.getElementById("ocr-progress-bar");
+      ocrProgress.style.width = "0%";
       await runOCR(pageNum);
       hideWorkingModal();
       endTask();

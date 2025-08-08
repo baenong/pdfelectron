@@ -7,9 +7,9 @@ import {
 } from "./domHelpers.js";
 
 const MASK_OFFSET_X = 5;
-const MASK_OFFSET_Y = 5;
+const MASK_OFFSET_Y = 0;
 const MASK_PADDING_WIDTH = 10;
-const MASK_PADDING_HEIGHT = 15;
+const MASK_PADDING_HEIGHT = 5;
 
 const MaskActionType = {
   ADD: "ADD_MASK",

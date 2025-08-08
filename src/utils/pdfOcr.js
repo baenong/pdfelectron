@@ -37,7 +37,7 @@ export function hideWorkingModal() {
 
   setTimeout(() => {
     modal.classList.add("hide");
-  }, 2000);
+  }, 1000);
 }
 
 async function initializeOCR() {
@@ -104,7 +104,6 @@ export async function runOCR(pageNum) {
   }));
 
   const pageTexts = getPageText(pageNum);
-  console.log("페이지 텍스트: ", pageTexts);
 
   if (pageTexts.length > 0) {
     const canvasHeight = document.getElementById("masking-canvas").height;
@@ -119,23 +118,16 @@ export async function runOCR(pageNum) {
         while ((match = regex.exec(noGap)) !== null) {
           const matchedText = match[0];
           const textLen = textItem.text.length;
+          const charWidth = textItem.width / textLen;
           const matchedLen = matchedText.length;
 
           const bbox = textItem.transform;
-          const x = bbox[4] * INITIAL_RENDER_SCALE;
+          const x = (bbox[4] + charWidth * match.index) * INITIAL_RENDER_SCALE;
           const y =
             canvasHeight - (bbox[5] + textItem.height) * INITIAL_RENDER_SCALE;
 
-          const maskWidth =
-            (textItem.width / textLen) * matchedLen * INITIAL_RENDER_SCALE;
+          const maskWidth = charWidth * matchedLen * INITIAL_RENDER_SCALE;
           const maskHeight = textItem.height * INITIAL_RENDER_SCALE;
-
-          console.log("저장 정보: ", {
-            x: x,
-            y: y,
-            width: maskWidth,
-            height: maskHeight,
-          });
 
           cntPrivacy += 1;
           addMask(pageNum, {
@@ -150,8 +142,6 @@ export async function runOCR(pageNum) {
       }
     }
   } else {
-    await initializeOCR();
-
     const pdfDoc = getPdfDoc();
     const page = await pdfDoc.getPage(pageNum);
     const viewport = page.getViewport({
@@ -168,7 +158,30 @@ export async function runOCR(pageNum) {
       viewport: viewport,
     }).promise;
 
-    //openCv.js를 통한 전처리
+    const opencvLoaded =
+      typeof cv !== "undefined" && typeof cv.imread === "function";
+
+    if (opencvLoaded) {
+      const src = cv.imread(tempCanvas);
+      const gray = new cv.Mat();
+      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+      const dst = new cv.Mat();
+      cv.adaptiveThreshold(
+        gray,
+        dst,
+        255,
+        cv.ADAPTIVE_THRESH_GAUSSIAN_C,
+        cv.THRESH_BINARY,
+        11,
+        2
+      );
+      cv.imshow(tempCanvas, dst);
+      src.delete();
+      gray.delete();
+      dst.delete();
+    }
+
+    await initializeOCR();
 
     const {
       data: { blocks },
@@ -185,8 +198,6 @@ export async function runOCR(pageNum) {
 
                   for (const { regex } of regexExps) {
                     let match;
-                    // global regex는 exec 호출 시마다 lastIndex를 업데이트하므로
-                    // 반드시 lastIndex = 0;으로 초기화해야한다.
                     regex.lastIndex = 0;
 
                     while ((match = regex.exec(noGap)) !== null) {

@@ -3,7 +3,7 @@
 #extract-modal,
 #working-modal {
   position: fixed;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.8);
   height: calc(100vh - 60px);
   width: 100vw;
   top: 36px;

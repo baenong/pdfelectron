@@ -258,9 +258,10 @@ footer {
 
 #messagebox {
   font-size: 14px;
-  font-weight: 300;
-  color: red;
+  font-weight: 400;
+  color: #ddd;
   padding: 5px 15px;
+  height: 14px;
 }
 
 @media screen and (max-width: 860px) {

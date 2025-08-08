@@ -219,7 +219,7 @@
             <div class="help-modal-title">■ PDF Tool</div>
             <div class="help-text">
               pdf파일의 개인정보 또는 일부를 수동으로 가리거나 이미지 탐색을
-              통해 자동으로 지울 수 있는(오류 다수) 프로그램입니다.
+              통해 자동으로 지울 수 있는 프로그램입니다.
             </div>
             <div class="help-text">
               예를 들어 다음과 같은 경우 주민등록번호를 탐색하여 마스킹합니다.
@@ -346,16 +346,12 @@
               - 항상 오탐지, 미탐지할 수 있음을 고려해야 합니다.
             </div>
             <div class="help-text">
-              - 키워드 근처 텍스트도 같이 마스킹처리될 수 있습니다. 예를 들어
-              '질병'을 검색했더니 '질병휴직'을 마스킹할 수도 있습니다.
+              - 입력한 키워드 근처의 텍스트도 같이 마스킹처리될 수 있습니다.
+              예를 들어 '질병'을 검색했는데 '질병휴직'을 마스킹할 수도 있습니다.
             </div>
             <div class="help-text">
-              ② 구현 상의 용이함을 위해 PDF파일을 불러오면 이미지로 변환되며
-              텍스트 정보 등이 누락됩니다.
-            </div>
-            <div class="help-text">
-              즉, 작업 후 저장할 경우 해당 파일에서는 Ctrl+F등의 작업이
-              불가합니다.
+              ② 찾기(Ctrl+F)등으로 개인정보를 탐색하는 것을 막기 위해 PDF파일을
+              저장하면 이미지로 변환되며 텍스트 정보 등이 누락됩니다.
             </div>
             <div class="help-text">
               ③ 블러처리한 마스킹의 경우 불완전할 수 있습니다.
@@ -368,6 +364,7 @@
       </div>
     </div>
 
+    <script async src="./opencv/opencv.js"></script>
     <script src="./ocr/worker.min.js"></script>
     <script src="./ocr/tesseract.min.js"></script>
     <script src="./pdfjs/pdf-lib.min.js"></script>

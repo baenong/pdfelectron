@@ -130,7 +130,6 @@ async function getPageImage(pdf, pageNum) {
 
   const textContent = await page.getTextContent();
 
-  // scale해야할지는 두고보자
   tempText[totalPages] = textContent.items.map((item) => ({
     text: item.str,
     transform: item.transform,

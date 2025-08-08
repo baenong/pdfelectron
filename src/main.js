@@ -33,7 +33,7 @@ const createWindow = () => {
     app.quit();
   });
   // 디버깅 시 사용할 개발자 도구
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 };
 
 // 'window-control' 채널에서 메시지를 수신 대기
