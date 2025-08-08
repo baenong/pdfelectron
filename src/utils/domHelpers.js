@@ -2,6 +2,15 @@ export const hideElement = (elem) => elem.classList.add("hide");
 export const showElement = (elem) => elem.classList.remove("hide");
 export const toggleHide = (elem) => elem.classList.toggle("hide");
 
+export const clearAllModals = () => {
+  const extractModal = document.getElementById("extract-modal");
+  const regexModal = document.getElementById("regex-modal");
+  const helpModal = document.getElementById("help-modal");
+  hideElement(extractModal);
+  hideElement(regexModal);
+  hideElement(helpModal);
+};
+
 export const throttle = (func, limit) => {
   let inThrottle;
   return function () {

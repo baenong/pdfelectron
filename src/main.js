@@ -10,12 +10,11 @@ const store = new Store({
 });
 
 const createWindow = () => {
-  // const dirname = fileURLToPath(new URL(".", import.meta.url));
   const dirname = join(app.getAppPath(), "src");
   const mainWindow = new BrowserWindow({
     width: 1024,
     height: 960,
-    frame: false, // Basic Frame Hide
+    frame: false,
     webPreferences: {
       preload: join(dirname, "preload.js"),
       additionalArguments: [
@@ -34,7 +33,7 @@ const createWindow = () => {
     app.quit();
   });
   // 디버깅 시 사용할 개발자 도구
-  // mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 };
 
 // 'window-control' 채널에서 메시지를 수신 대기

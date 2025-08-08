@@ -5,7 +5,7 @@ import {
   getPdfDoc,
   setInitialMaskColor,
 } from "./utils/pdfViewer.js";
-import { setupPageNavigation } from "./utils/pageNavigation.js";
+import { movePage, setupPageNavigation } from "./utils/pageNavigation.js";
 import {
   displayWorkingModal,
   hideWorkingModal,
@@ -42,7 +42,12 @@ import {
   insertList,
   setRegex,
 } from "./utils/regexManager.js";
-import { hideElement, showElement, toggleHide } from "./utils/domHelpers.js";
+import {
+  clearAllModals,
+  hideElement,
+  showElement,
+  toggleHide,
+} from "./utils/domHelpers.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   // 파일 메뉴 ----------------------------------------------------------------------
@@ -75,9 +80,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       targetId = event.target.parentElement.id;
     }
 
-    hideElement(extractModal);
-    hideElement(regexModal);
-    hideElement(helpModal);
+    if (!document.getElementById(targetId)) return;
+    if (document.getElementById(targetId).classList.contains("disabled"))
+      return;
 
     switch (targetId) {
       case "minimize-btn":
@@ -124,6 +129,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         endTask();
         break;
       case "extract-select-btn":
+        clearAllModals();
         showElement(extractModal);
         hideElement(wrapperEdit);
         break;
@@ -131,6 +137,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         toggleHide(wrapperSetting);
         break;
       case "regex-btn":
+        clearAllModals();
         showElement(regexModal);
         hideElement(wrapperSetting);
         insertList();
@@ -140,6 +147,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         hideElement(wrapperSetting);
         break;
       case "menu-help":
+        clearAllModals();
         showElement(helpModal);
         break;
       case "help-modal-close":
@@ -202,13 +210,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     .addEventListener("click", async () => {
       const pdfDoc = getPdfDoc();
       if (!pdfDoc) return;
-
-      const canvas = document.getElementById("pdf-canvas");
       const pageNum = getCurrentPageNum();
 
       incMaskingCount();
       displayWorkingModal();
-      await runOCR(canvas, pageNum);
+      await runOCR(pageNum);
       hideWorkingModal();
       endTask();
     });
@@ -219,6 +225,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       elem.target.style.backgroundColor = elem.target.value;
       window.api.set({ key: "color", value: elem.target.value });
     });
+
+  const currentPageBox = document.getElementById("current-page");
+  const totalPageBox = document.getElementById("total-page");
+  currentPageBox.addEventListener("change", () => {
+    let inputPage = Number(currentPageBox.value);
+    const totalPage = Number(totalPageBox.textContent);
+    const prevPage = getCurrentPageNum();
+
+    if (!inputPage || inputPage === NaN) return;
+    if (inputPage > totalPage) inputPage = totalPage;
+    if (inputPage < 1) inputPage = 1;
+
+    movePage(inputPage - prevPage);
+  });
 
   const maskingCanvas = document.getElementById("masking-canvas");
   maskingCanvas.addEventListener("mousedown", (event) => dragStart(event));

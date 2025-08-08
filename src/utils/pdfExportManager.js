@@ -19,20 +19,39 @@ export async function saveExtractPdf() {
   let inputValue = document.getElementById("extract-pages").value;
   inputValue = inputValue.replace(" ", "");
 
-  const regexPage = /[^0-9,]/;
-  if (regexPage.test(inputValue)) {
-    setMessage("정수와 쉼표를 입력하세요");
+  const regexPage = /^(\d+(-\d+)?)(,(\d+(-\d+)?))*$/;
+  if (!regexPage.test(inputValue)) {
+    setMessage("올바른 페이지 번호를 입력하세요");
     return;
   }
 
-  let extractPages = inputValue.split(",");
-  extractPages = extractPages.filter((elem) => {
-    return elem !== "";
-  });
+  const parts = inputValue.split(",");
+  const pages = new Set();
+  for (const part of parts) {
+    if (part.includes("-")) {
+      const [start, end] = part.split("-").map(Number);
 
-  const uniquePages = new Set(extractPages);
-  extractPages = [...uniquePages];
-  extractPages = extractPages.map(Number).sort((a, b) => a - b);
+      if (start < 1 || end < 1) {
+        setMessage("페이지 번호는 양수로 입력하세요");
+        return;
+      }
+
+      const from = Math.min(start, end);
+      const to = Math.max(start, end);
+      for (let i = from; i <= to; i++) {
+        pages.add(i);
+      }
+    } else {
+      const num = Number(part);
+      if (num < 1) {
+        setMessage("페이지 번호는 양수로 입력하세요");
+        return;
+      }
+      pages.add(Number(part));
+    }
+  }
+
+  const extractPages = [...pages].map(Number).sort((a, b) => a - b);
 
   for (const pageNum of extractPages) {
     if (!(pageNum < 1 || pageNum > numPages)) {
@@ -170,13 +189,11 @@ async function getPngByPageNum(pdfDoc, pageNum) {
 
         tempCtx.drawImage(blurCanvas, retouch, retouch, sw, sh, sx, sy, sw, sh);
       } else {
-        if (maskInfo.color) {
-          const { r, g, b } = maskInfo.color;
-          tempCtx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-        } else {
-          tempCtx.fillStyle = "black";
-        }
+        const { r, g, b } = maskInfo.color
+          ? maskInfo.color
+          : { r: 0, g: 0, b: 0 };
 
+        tempCtx.fillStyle = `rgb(${r}, ${g}, ${b})`;
         tempCtx.fillRect(sx, sy, sw, sh);
       }
     });

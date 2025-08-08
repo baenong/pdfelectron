@@ -2,6 +2,7 @@ node_modules/
 dist/
 build/
 src/ocr
+src/opencv
 src/pdfjs
 src/css/PretendardVariable.woff2
 img/

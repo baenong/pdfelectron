@@ -18,10 +18,12 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = "../pdfjs/pdf.worker.min.mjs";
 let pdfDoc = null;
 let currentPageNum = 1;
 let pageRendering = false;
+let pdfText = {};
+let tempText = {};
+let totalPages = 1;
 
 const pdfCanvas = document.getElementById("pdf-canvas");
 const context = pdfCanvas.getContext("2d");
-const pageInfoSpan = document.getElementById("page-info");
 const prevPageBtn = document.getElementById("prev-page-btn");
 const nextPageBtn = document.getElementById("next-page-btn");
 const pdfViewerContainer = document.getElementById("pdf-viewer-container");
@@ -88,7 +90,7 @@ export async function renderPage(pageNum) {
     try {
       const renderTask = page.render(renderContext);
 
-      renderTask.promise.then(() => {
+      renderTask.promise.then(async () => {
         pageRendering = false;
 
         updatePageInfo();
@@ -111,16 +113,67 @@ function clearCanvas() {
   context.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
 }
 
+async function getPageImage(pdf, pageNum) {
+  if (!pdf) return;
+  const page = await pdf.getPage(pageNum);
+
+  const viewport = page.getViewport({ scale: INITIAL_RENDER_SCALE });
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+
+  await page.render({
+    canvasContext: context,
+    viewport: viewport,
+  }).promise;
+
+  const textContent = await page.getTextContent();
+
+  // scale해야할지는 두고보자
+  tempText[totalPages] = textContent.items.map((item) => ({
+    text: item.str,
+    transform: item.transform,
+    width: item.width,
+    height: item.height,
+  }));
+
+  totalPages++;
+
+  const shrinkViewport = viewport.clone({ scale: 1 });
+
+  return {
+    imgUri: canvas.toDataURL("image/png"),
+    pageWidth: shrinkViewport.width,
+    pageHeight: shrinkViewport.height,
+  };
+}
+
 async function mergePdfs(pdfs) {
   const mergedPdf = await PDFDocument.create();
+  totalPages = 1;
 
   for (const pdfBytes of pdfs) {
     try {
       const pdf = await PDFDocument.load(pdfBytes);
       const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
       for (const page of copiedPages) mergedPdf.addPage(page);
+      totalPages += copiedPages.length;
     } catch (err) {
-      setMessage("암호화된 PDF 파일입니다.");
+      const pdf = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
+      const numPages = pdf.numPages + 1;
+
+      for (let i = 1; i < numPages; i++) {
+        const { imgUri, pageWidth, pageHeight } = await getPageImage(pdf, i);
+        const embeddedImg = await mergedPdf.embedPng(imgUri);
+        const newPage = mergedPdf.addPage([pageWidth, pageHeight]);
+        newPage.drawImage(embeddedImg, {
+          x: 0,
+          y: 0,
+          width: pageWidth,
+          height: pageHeight,
+        });
+      }
     }
   }
 
@@ -137,6 +190,28 @@ export async function setInitialMaskColor() {
   pickColor.style.backgroundColor = pickColor.value;
 }
 
+async function extractTextContent() {
+  const numPages = pdfDoc.numPages;
+
+  for (let i = 0; i < numPages; i++) {
+    const pageNum = i + 1;
+
+    if (Object.keys(tempText).includes(String(pageNum))) {
+      pdfText[pageNum] = tempText[pageNum];
+    } else {
+      const page = await pdfDoc.getPage(pageNum);
+      const textContent = await page.getTextContent();
+
+      pdfText[pageNum] = textContent.items.map((item) => ({
+        text: item.str,
+        transform: item.transform,
+        width: item.width,
+        height: item.height,
+      }));
+    }
+  }
+}
+
 export function setupPdfLoading() {
   const openPdfInput = document.getElementById("open-pdf");
 
@@ -147,6 +222,8 @@ export function setupPdfLoading() {
     const pdfs = [];
     currentPageNum = 1;
     pdfDoc = null;
+    pdfText = {};
+    tempText = {};
 
     for (const file of files) {
       if (file && file.type === "application/pdf") {
@@ -163,10 +240,12 @@ export function setupPdfLoading() {
     }
 
     if (pdfs.length === 0) return;
-    const mergedPDfs = await mergePdfs(pdfs);
+    const mergedPdfBytes = pdfs.length === 1 ? pdfs[0] : await mergePdfs(pdfs);
 
     try {
-      pdfDoc = await pdfjsLib.getDocument({ data: mergedPDfs }).promise;
+      pdfDoc = await pdfjsLib.getDocument({ data: mergedPdfBytes }).promise;
+      await extractTextContent();
+
       setThumbHeight();
       clearAllStoredMasks();
       renderPage(1);
@@ -185,10 +264,15 @@ export function setupPdfLoading() {
 }
 
 function updatePageInfo() {
+  const currentPageBox = document.getElementById("current-page");
+  const totalPageBox = document.getElementById("total-page");
+
   if (pdfDoc) {
-    pageInfoSpan.textContent = `${currentPageNum} / ${pdfDoc.numPages}`;
+    currentPageBox.value = currentPageNum;
+    totalPageBox.textContent = pdfDoc.numPages;
   } else {
-    pageInfoSpan.textContent = `- / -`;
+    currentPageBox.value = "";
+    totalPageBox.textContent = "-";
   }
 }
 
@@ -213,6 +297,10 @@ export function getCurrentPageNum() {
 export function getNumPages() {
   if (pdfDoc) return pdfDoc.numPages;
   else return 0;
+}
+
+export function getPageText(pageNum) {
+  return pdfText[pageNum] || [];
 }
 
 export function initializePdfViewer() {

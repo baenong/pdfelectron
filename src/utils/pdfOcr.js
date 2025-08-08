@@ -6,26 +6,34 @@ import {
   endTask,
   incMaskingCount,
 } from "./maskingManager.js";
-import { INITIAL_RENDER_SCALE, getPdfDoc } from "./pdfViewer.js";
+import { INITIAL_RENDER_SCALE, getPageText, getPdfDoc } from "./pdfViewer.js";
 import { getAll } from "./regexManager.js";
 
 let worker = null;
 let cntPrivacy = 0;
 
-export function displayWorkingModal() {
+function getWorkingElements() {
   const modal = document.getElementById("working-modal");
-  const searchCount = document.getElementById("search-count");
+  const ocrProgress = document.getElementById("ocr-progress-bar");
+  const ocrProgressText = document.getElementById("ocr-progress-text");
+  return { modal, ocrProgress, ocrProgressText };
+}
+
+export function displayWorkingModal() {
+  const { modal, ocrProgress, ocrProgressText } = getWorkingElements();
   if (modal.classList.contains("hide")) modal.classList.remove("hide");
   else return;
 
   cntPrivacy = 0;
-  searchCount.innerText = "탐색중...";
+  ocrProgress.style.width = "0%"; // 프로그레스 바 초기화
+  ocrProgressText.innerText = "OCR 준비 중..."; // 텍스트 초기화
 }
 
 export function hideWorkingModal() {
-  const modal = document.getElementById("working-modal");
-  const searchCount = document.getElementById("search-count");
-  searchCount.innerText = `${cntPrivacy} 건 마스킹 처리완료!`;
+  const { modal, ocrProgress, ocrProgressText } = getWorkingElements();
+
+  ocrProgress.style.width = "100%";
+  ocrProgressText.innerText = `${cntPrivacy} 건 마스킹 처리완료!`;
 
   setTimeout(() => {
     modal.classList.add("hide");
@@ -39,7 +47,26 @@ async function initializeOCR() {
     workerPath: "./ocr/worker.min.js",
     corePath: "./ocr/core",
     langPath: "./ocr/lang",
-    logger: (m) => console.log(m.status),
+    logger: (m) => {
+      const { ocrProgress, ocrProgressText } = getWorkingElements();
+
+      if (
+        m.progress &&
+        m.status !== "uninitialized" &&
+        ocrProgress &&
+        ocrProgressText
+      ) {
+        const progress = Math.round(m.progress * 100);
+        ocrProgress.style.width = `${progress}%`;
+
+        let status = m.status;
+
+        status = status.replaceAll("initializing api", "엔진 구동 중");
+        status = status.replaceAll("recognizing text", "글자 인식 중");
+
+        ocrProgressText.innerText = `${status}: ${progress}%`;
+      }
+    },
   });
 
   return worker;
@@ -48,22 +75,89 @@ async function initializeOCR() {
 export async function runAllOCR() {
   const pdfDoc = getPdfDoc();
   if (!pdfDoc) return;
-  await initializeOCR();
 
   clearAllOcrMasks();
   displayWorkingModal();
   incMaskingCount();
 
   const numPages = pdfDoc.numPages;
+  const { ocrProgressText } = getWorkingElements();
 
   for (let i = 0; i < numPages; i++) {
     const pageNum = i + 1;
+    ocrProgressText.innerText = `전체 ${numPages} 페이지 중 ${pageNum} 페이지 처리 중...`;
+
+    await runOCR(pageNum);
+  }
+
+  hideWorkingModal();
+  endTask();
+}
+
+export async function runOCR(pageNum) {
+  clearOcrMasks(pageNum);
+
+  const regexList = getAll();
+  const regexExps = Object.keys(regexList).map((key) => ({
+    key: key,
+    regex: new RegExp(regexList[key], "g"),
+  }));
+
+  const pageTexts = getPageText(pageNum);
+  console.log("페이지 텍스트: ", pageTexts);
+
+  if (pageTexts.length > 0) {
+    const canvasHeight = document.getElementById("masking-canvas").height;
+
+    for (const textItem of pageTexts) {
+      const noGap = textItem.text.replaceAll(" ", "");
+
+      for (const { regex } of regexExps) {
+        let match;
+        regex.lastIndex = 0;
+
+        while ((match = regex.exec(noGap)) !== null) {
+          const matchedText = match[0];
+          const textLen = textItem.text.length;
+          const matchedLen = matchedText.length;
+
+          const bbox = textItem.transform;
+          const x = bbox[4] * INITIAL_RENDER_SCALE;
+          const y =
+            canvasHeight - (bbox[5] + textItem.height) * INITIAL_RENDER_SCALE;
+
+          const maskWidth =
+            (textItem.width / textLen) * matchedLen * INITIAL_RENDER_SCALE;
+          const maskHeight = textItem.height * INITIAL_RENDER_SCALE;
+
+          console.log("저장 정보: ", {
+            x: x,
+            y: y,
+            width: maskWidth,
+            height: maskHeight,
+          });
+
+          cntPrivacy += 1;
+          addMask(pageNum, {
+            x: x,
+            y: y,
+            width: maskWidth,
+            height: maskHeight,
+            color: "rgba(255, 0, 0, 0.5)",
+            kind: "ocr",
+          });
+        }
+      }
+    }
+  } else {
+    await initializeOCR();
+
+    const pdfDoc = getPdfDoc();
     const page = await pdfDoc.getPage(pageNum);
     const viewport = page.getViewport({
       scale: INITIAL_RENDER_SCALE,
     });
 
-    // runOCR은 canvas 기준으로 읽으므로 임시 canvas를 만들어서 실행
     const tempCanvas = document.createElement("canvas");
     const tempCtx = tempCanvas.getContext("2d");
     tempCanvas.width = viewport.width;
@@ -74,97 +168,81 @@ export async function runAllOCR() {
       viewport: viewport,
     }).promise;
 
-    await runOCR(tempCanvas, pageNum);
-  }
+    //openCv.js를 통한 전처리
 
-  hideWorkingModal();
-  endTask();
-}
+    const {
+      data: { blocks },
+    } = await worker.recognize(tempCanvas, {}, { blocks: true });
 
-export async function runOCR(canvas, pageNum) {
-  if (!canvas) return;
-  await initializeOCR();
+    if (blocks && blocks.length > 0) {
+      for (const block of blocks) {
+        if (block.paragraphs && block.paragraphs.length > 0) {
+          for (const paragraph of block.paragraphs) {
+            if (paragraph.lines && paragraph.lines.length > 0) {
+              for (const line of paragraph.lines) {
+                if (line.words && line.words.length > 0) {
+                  const noGap = line.text.replaceAll(" ", "");
 
-  clearOcrMasks(pageNum);
+                  for (const { regex } of regexExps) {
+                    let match;
+                    // global regex는 exec 호출 시마다 lastIndex를 업데이트하므로
+                    // 반드시 lastIndex = 0;으로 초기화해야한다.
+                    regex.lastIndex = 0;
 
-  const {
-    data: { blocks },
-  } = await worker.recognize(canvas, {}, { blocks: true });
+                    while ((match = regex.exec(noGap)) !== null) {
+                      const matchedText = match[0];
+                      const matchedIdx = match.index;
 
-  const regexList = getAll();
-  const regexExps = Object.keys(regexList).map((key) => ({
-    key: key,
-    regex: new RegExp(regexList[key], "g"),
-  }));
+                      let startIdx = -1;
+                      let endIdx = -1;
+                      let currLen = 0;
 
-  if (blocks && blocks.length > 0) {
-    for (const block of blocks) {
-      if (block.paragraphs && block.paragraphs.length > 0) {
-        for (const paragraph of block.paragraphs) {
-          if (paragraph.lines && paragraph.lines.length > 0) {
-            for (const line of paragraph.lines) {
-              if (line.words && line.words.length > 0) {
-                const noGap = line.text.replaceAll(" ", "");
+                      for (let j = 0; j < line.words.length; j++) {
+                        const word = line.words[j];
+                        const len = word.text.length;
 
-                for (const { key, regex } of regexExps) {
-                  let match;
-                  // global regex는 exec 호출 시마다 lastIndex를 업데이트하므로
-                  // 반드시 lastIndex = 0;으로 초기화해야한다.
-                  regex.lastIndex = 0;
+                        if (
+                          startIdx === -1 &&
+                          matchedIdx >= currLen &&
+                          matchedIdx < currLen + len
+                        ) {
+                          startIdx = j;
+                        }
 
-                  while ((match = regex.exec(noGap)) !== null) {
-                    const matchedText = match[0];
-                    const matchedIdx = match.index;
-
-                    let startIdx = -1;
-                    let endIdx = -1;
-                    let currLen = 0;
-
-                    for (let j = 0; j < line.words.length; j++) {
-                      const word = line.words[j];
-                      const len = word.text.length;
-
-                      if (
-                        startIdx === -1 &&
-                        matchedIdx >= currLen &&
-                        matchedIdx < currLen + len
-                      ) {
-                        startIdx = j;
+                        if (
+                          startIdx !== -1 &&
+                          matchedIdx + matchedText.length <= currLen + len
+                        ) {
+                          endIdx = j;
+                          break;
+                        }
+                        currLen += len;
                       }
 
-                      if (
-                        startIdx !== -1 &&
-                        matchedIdx + matchedText.length <= currLen + len
-                      ) {
-                        endIdx = j;
-                        break;
+                      if (startIdx !== -1 && endIdx !== -1) {
+                        let minX0 = Infinity;
+                        let minY0 = Infinity;
+                        let maxX1 = -Infinity;
+                        let maxY1 = -Infinity;
+
+                        for (let k = startIdx; k <= endIdx; k++) {
+                          const wordBox = line.words[k].bbox;
+                          minX0 = Math.min(minX0, wordBox.x0);
+                          minY0 = Math.min(minY0, wordBox.y0);
+                          maxX1 = Math.max(maxX1, wordBox.x1);
+                          maxY1 = Math.max(maxY1, wordBox.y1);
+                        }
+
+                        cntPrivacy += 1;
+                        addMask(pageNum, {
+                          x: minX0,
+                          y: minY0,
+                          width: maxX1 - minX0,
+                          height: maxY1 - minY0,
+                          color: "rgba(255, 0, 0, 0.5)",
+                          kind: "ocr",
+                        });
                       }
-                      currLen += len;
-                    }
-
-                    if (startIdx !== -1 && endIdx !== -1) {
-                      let minX0 = Infinity;
-                      let minY0 = Infinity;
-                      let maxX1 = -Infinity;
-                      let maxY1 = -Infinity;
-
-                      for (let k = startIdx; k <= endIdx; k++) {
-                        const wordBox = line.words[k].bbox;
-                        minX0 = Math.min(minX0, wordBox.x0);
-                        minY0 = Math.min(minY0, wordBox.y0);
-                        maxX1 = Math.max(maxX1, wordBox.x1);
-                        maxY1 = Math.max(maxY1, wordBox.y1);
-                      }
-
-                      cntPrivacy += 1;
-                      addMask(pageNum, {
-                        x: minX0,
-                        y: minY0,
-                        width: maxX1 - minX0,
-                        height: maxY1 - minY0,
-                        color: "rgba(255, 0, 0, 0.5)",
-                        kind: "ocr",
-                      });
                     }
                   }
                 }
