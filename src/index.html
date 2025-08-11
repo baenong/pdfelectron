@@ -78,6 +78,12 @@
         <li id="regex-clear-btn">
           <div class="menu-name">키워드 초기화</div>
         </li>
+        <li id="always-ocr">
+          <div class="menu-name">
+            <label for="always-ocr-check">항상 OCR</label>
+            <input type="checkbox" id="always-ocr-check" />
+          </div>
+        </li>
       </ul>
     </div>
 
@@ -88,7 +94,7 @@
             <img class="func-img" src="../img/ui-search.png" />
             <span class="tooltip">키워드탐색</span>
           </div>
-          <div id="mask-box-btn" class="isused">
+          <div id="mask-box-btn" class="isused disabled">
             <img class="func-img" src="../img/ui-masking.png" />
             <span class="tooltip">마스킹</span>
           </div>
@@ -363,12 +369,24 @@
               <div class="blank"></div>
               <img src="../img/help-keywordafter.png" class="help-img" />
             </div>
+            <div class="help-text">
+              ⑤ [설정] OCR(이미지 문자 인식) 기능을 항상 먼저 사용할 지 설정할
+              수 있습니다.
+            </div>
+            <div class="help-text">
+              - OCR 기능은 시간이 오래걸리는 관계로 PDF 내에 기본적으로 텍스트
+              정보가 없는 경우 실행하게 되어있습니다.
+            </div>
+            <div class="help-text">
+              - 무료 OCR 기능을 사용했기 때문에 오탐지, 미탐지하는 경우가 다수
+              있습니다.
+            </div>
           </div>
           <div class="help-modal-paragraph">
             <div class="help-modal-title">3. 주의사항</div>
             <div class="help-text">
-              ① 무료 이미지 탐지 서비스를 사용했기 때문에 개인정보 탐색 기능을
-              너무 맹신하면 안됩니다.
+              ① 무료 OCR 기능을 사용했기 때문에 키워드 탐색 기능을 너무 맹신하면
+              안됩니다.
             </div>
             <div class="help-text">
               - 항상 오탐지, 미탐지할 수 있음을 고려해야 합니다.
@@ -382,11 +400,10 @@
               저장하면 이미지로 변환되며 텍스트 정보 등이 누락됩니다.
             </div>
             <div class="help-text">
-              ③ 글자 크기가 너무 크면 마스킹 범위가 살짝 어긋납니다.
+              ③ 글자 크기가 너무 크면 마스킹 범위가 어긋납니다.
             </div>
             <div class="help-text">
-              ④ 내용편집 기능 등은 Canva같은 PDF 편집기를 사용하는 것이
-              좋습니다.
+              ④ 내용편집 기능 등은 Canva같은 PDF 편집기를 사용할 수 있습니다.
             </div>
           </div>
         </div>

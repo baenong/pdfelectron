@@ -11,6 +11,7 @@ import {
   hideWorkingModal,
   runAllOCR,
   runOCR,
+  setIsAlwaysOcr,
   terminateOCR,
 } from "./utils/pdfOcr.js";
 import {
@@ -214,9 +215,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       incMaskingCount();
       displayWorkingModal();
+
       const ocrProgress = document.getElementById("ocr-progress-bar");
       ocrProgress.style.width = "0%";
+
+      setIsAlwaysOcr();
       await runOCR(pageNum);
+
       hideWorkingModal();
       endTask();
     });

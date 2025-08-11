@@ -11,6 +11,7 @@ import { getAll } from "./regexManager.js";
 
 let worker = null;
 let cntPrivacy = 0;
+let isAlwaysOcr = false;
 
 function getWorkingElements() {
   const modal = document.getElementById("working-modal");
@@ -38,6 +39,10 @@ export function hideWorkingModal() {
   setTimeout(() => {
     modal.classList.add("hide");
   }, 1000);
+}
+
+export function setIsAlwaysOcr() {
+  isAlwaysOcr = document.getElementById("always-ocr-check").checked;
 }
 
 async function initializeOCR() {
@@ -79,6 +84,7 @@ export async function runAllOCR() {
   clearAllOcrMasks();
   displayWorkingModal();
   incMaskingCount();
+  setIsAlwaysOcr();
 
   const numPages = pdfDoc.numPages;
   const { ocrProgressText } = getWorkingElements();
@@ -105,81 +111,112 @@ export async function runOCR(pageNum) {
 
   const pageTexts = getPageText(pageNum);
 
-  if (pageTexts.length > 0) {
+  if (!isAlwaysOcr && pageTexts.length > 0) {
     const canvasHeight = document.getElementById("masking-canvas").height;
 
-    const lines = [];
-    let currentLine = [];
-    let lastY = -1;
-    const Y_TOLERANCE = 1;
-
-    pageTexts.sort(
-      (a, b) =>
-        a.transform[5] - b.transform[5] || a.transform[4] - b.transform[4]
-    );
-
     for (const textItem of pageTexts) {
-      const currentY = textItem.transform[5];
-      if (lastY === -1 || Math.abs(currentY - lastY) <= Y_TOLERANCE) {
-        currentLine.push(textItem);
-      } else {
-        lines.push(currentLine);
-        currentLine = [textItem];
-      }
-      lastY = currentY;
-    }
-
-    if (currentLine.length > 0) lines.push(currentLine);
-
-    for (const line of lines) {
-      const combinedText = line.map((item) => item.text).join("");
-
+      const word = textItem.text;
       for (const { regex } of regexExps) {
         let match;
         regex.lastIndex = 0;
 
-        while ((match = regex.exec(combinedText)) !== null) {
+        while ((match = regex.exec(word)) !== null) {
           const matchedText = match[0];
-          const matchedIdx = match.index;
+          const len = word.length;
+          const charWidth = textItem.width / len;
           const matchedLen = matchedText.length;
 
-          let currLen = 0;
-          let minX = Infinity;
-          let minY = Infinity;
-          let maxX = -Infinity;
-          let maxY = -Infinity;
-
-          for (const word of line) {
-            const text = word.text;
-            const len = text.length;
-            if (
-              matchedIdx + matchedLen > currLen &&
-              matchedIdx < currLen + len
-            ) {
-              const startIdx = Math.max(0, matchedIdx - currLen);
-              const endIdx = Math.min(len, matchedIdx - currLen + matchedLen);
-
-              const charWidth = word.width / len;
-              const currentX = word.transform[4] + startIdx * charWidth;
-              const currentWidth = (endIdx - startIdx) * charWidth;
-
-              minX = Math.min(minX, currentX);
-              minY = Math.min(minY, word.transform[5]);
-              maxX = Math.max(maxX, currentX + currentWidth);
-              maxY = Math.max(maxY, word.transform[5] + word.height);
-            }
-            currLen += len;
-          }
+          const bbox = textItem.transform;
+          const x = bbox[4] + charWidth * match.index;
+          const y = bbox[5] + textItem.height;
+          const width = charWidth * matchedLen;
+          const height = textItem.height;
 
           cntPrivacy += 1;
           addMask(pageNum, {
-            x: (minX + 1) * INITIAL_RENDER_SCALE,
-            y: canvasHeight - maxY * INITIAL_RENDER_SCALE,
-            width: (maxX - minX - 1) * INITIAL_RENDER_SCALE,
-            height: (maxY - minY) * INITIAL_RENDER_SCALE,
-            color: "rgba(255, 0, 0, 0.5)",
+            x: x * INITIAL_RENDER_SCALE,
+            y: canvasHeight - y * INITIAL_RENDER_SCALE,
+            width: width * INITIAL_RENDER_SCALE,
+            height: height * INITIAL_RENDER_SCALE,
             kind: "ocr",
           });
+        }
+      }
+    }
+
+    if (cntPrivacy === 0) {
+      const lines = [];
+      let currentLine = [];
+      let lastY = -1;
+      const Y_TOLERANCE = 1;
+
+      pageTexts.sort(
+        (a, b) =>
+          a.transform[5] - b.transform[5] || a.transform[4] - b.transform[4]
+      );
+
+      for (const textItem of pageTexts) {
+        const currentY = textItem.transform[5];
+        if (lastY === -1 || Math.abs(currentY - lastY) <= Y_TOLERANCE) {
+          currentLine.push(textItem);
+        } else {
+          lines.push(currentLine);
+          currentLine = [textItem];
+        }
+        lastY = currentY;
+      }
+
+      if (currentLine.length > 0) lines.push(currentLine);
+
+      for (const line of lines) {
+        const combinedText = line.map((item) => item.text).join("");
+
+        for (const { regex } of regexExps) {
+          let match;
+          regex.lastIndex = 0;
+
+          while ((match = regex.exec(combinedText)) !== null) {
+            const matchedText = match[0];
+            const matchedIdx = match.index;
+            const matchedLen = matchedText.length;
+
+            let currLen = 0;
+            let minX = Infinity;
+            let minY = Infinity;
+            let maxX = -Infinity;
+            let maxY = -Infinity;
+
+            for (const word of line) {
+              const text = word.text;
+              const len = text.length;
+              if (
+                matchedIdx + matchedLen > currLen &&
+                matchedIdx < currLen + len
+              ) {
+                const startIdx = Math.max(0, matchedIdx - currLen);
+                const endIdx = Math.min(len, matchedIdx - currLen + matchedLen);
+
+                const charWidth = word.width / len;
+                const currentX = word.transform[4] + startIdx * charWidth;
+                const currentWidth = (endIdx - startIdx) * charWidth;
+
+                minX = Math.min(minX, currentX);
+                minY = Math.min(minY, word.transform[5]);
+                maxX = Math.max(maxX, currentX + currentWidth);
+                maxY = Math.max(maxY, word.transform[5] + word.height);
+              }
+              currLen += len;
+            }
+
+            cntPrivacy += 1;
+            addMask(pageNum, {
+              x: (minX + 1) * INITIAL_RENDER_SCALE,
+              y: canvasHeight - maxY * INITIAL_RENDER_SCALE,
+              width: (maxX - minX - 1) * INITIAL_RENDER_SCALE,
+              height: (maxY - minY) * INITIAL_RENDER_SCALE,
+              kind: "ocr",
+            });
+          }
         }
       }
     }
@@ -292,7 +329,6 @@ export async function runOCR(pageNum) {
                           y: minY0,
                           width: maxX1 - minX0,
                           height: maxY1 - minY0,
-                          color: "rgba(255, 0, 0, 0.5)",
                           kind: "ocr",
                         });
                       }

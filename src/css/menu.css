@@ -95,6 +95,17 @@
   left: 85px;
 }
 
+#always-ocr .menu-name {
+  margin-right: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
+#mask-box-option {
+  gap: 5px;
+}
+
 /* 창 조절 버튼 컨테이너 */
 .window-controls {
   /* 드래그 가능 영역에서 버튼 부분만 제외 */

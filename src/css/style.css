@@ -195,6 +195,10 @@ button {
   filter: invert(80%);
 }
 
+#mask-box-btn.isused.disabled {
+  background-color: #555;
+}
+
 .tooltip {
   transition: display 1s ease;
 }
@@ -207,6 +211,7 @@ button {
   appearance: none;
   background-color: black;
   border: none;
+  margin-left: 10px;
 }
 
 #mask-erase-btn.isused,

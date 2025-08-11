@@ -1,7 +1,7 @@
 {
   "name": "pdfelectron",
   "version": "1.1.0",
-  "description": "light PDF management program",
+  "description": "인사계 PDF 프로그램",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
@@ -10,7 +10,7 @@
     "build": "electron-builder --windows portable"
   },
   "keywords": [],
-  "author": "Baenong",
+  "author": "안민수",
   "license": "ISC",
   "devDependencies": {
     "electron": "^37.1.0",
