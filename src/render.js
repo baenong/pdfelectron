@@ -3,7 +3,7 @@ import {
   initializePdfViewer,
   getCurrentPageNum,
   getPdfDoc,
-  setInitialMaskColor,
+  setInitialSetting,
 } from "./utils/pdfViewer.js";
 import { movePage, setupPageNavigation } from "./utils/pageNavigation.js";
 import {
@@ -188,6 +188,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById("regex-key").value = "";
         document.getElementById("regex-value").value = "";
         break;
+      case "always-ocr-check":
+        window.api.set({ key: "isAlways", value: event.target.checked });
+        break;
     }
   });
 
@@ -304,7 +307,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // --- PDF 뷰어 및 페이지 네비게이션 기능 초기화 ---
   fetchAll();
   setupPdfLoading();
-  setInitialMaskColor();
+  setInitialSetting();
   setupPageNavigation();
   initializePdfViewer();
   initializeMaskingCanvas();

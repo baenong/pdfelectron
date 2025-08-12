@@ -96,6 +96,7 @@ export async function fetchAll() {
     const data = await window.api.fetchAll();
     regexData = data;
     delete regexData["color"];
+    delete regexData["isAlways"];
   } catch (error) {
     console.error("정규식 데이터 로드 중 오류 발생: ", error);
     regexData = {};

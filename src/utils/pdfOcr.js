@@ -242,22 +242,26 @@ export async function runOCR(pageNum) {
 
     if (opencvLoaded) {
       const src = cv.imread(tempCanvas);
+
       const gray = new cv.Mat();
       cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
-      const dst = new cv.Mat();
+
+      const binary = new cv.Mat();
       cv.adaptiveThreshold(
         gray,
-        dst,
+        binary,
         255,
         cv.ADAPTIVE_THRESH_GAUSSIAN_C,
         cv.THRESH_BINARY,
         11,
         2
       );
-      cv.imshow(tempCanvas, dst);
+
+      cv.imshow(tempCanvas, binary);
+
       src.delete();
       gray.delete();
-      dst.delete();
+      binary.delete();
     }
 
     await initializeOCR();

@@ -180,13 +180,18 @@ async function mergePdfs(pdfs) {
   return mergedPdfBytes;
 }
 
-export async function setInitialMaskColor() {
+export async function setInitialSetting() {
   const pickColor = document.getElementById("pick-mask-color");
   const initialColor = await window.api.fetch("color");
 
   if (initialColor) pickColor.value = initialColor;
   else pickColor.value = "#000000";
   pickColor.style.backgroundColor = pickColor.value;
+
+  const isAlways = document.getElementById("always-ocr-check");
+  const initialCheck = await window.api.fetch("isAlways");
+  if (initialCheck) isAlways.checked = initialCheck;
+  else isAlways.checked = false;
 }
 
 async function extractTextContent() {
