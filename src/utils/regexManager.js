@@ -70,14 +70,19 @@ function clearLines() {
 }
 
 export function setRegex() {
-  const key = document.getElementById("regex-key").value;
+  const regexKey = document.getElementById("regex-key");
+  const regexVal = document.getElementById("regex-value");
+  const key = regexKey.value;
   if (key === "" || key === "color") return;
 
-  const value = document.getElementById("regex-value").value;
+  const value = regexVal.value;
   if (value === "") return;
 
   regexData[key] = value;
   window.api.set({ key: key, value: value });
+
+  regexKey.value = "";
+  regexVal.value = "";
 
   clearLines();
   addLines();
