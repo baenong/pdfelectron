@@ -13,6 +13,17 @@ let worker = null;
 let cntPrivacy = 0;
 let isAlwaysOcr = false;
 
+const charWeights = {
+  korean: 1,
+  number: 0.55,
+  alphabet: 0.8,
+  space: 0.42,
+  narrow: 0.2,
+  wide: 0.37,
+  parentheses: 0.3,
+  quotes: 0.37,
+};
+
 function getWorkingElements() {
   const modal = document.getElementById("working-modal");
   const ocrProgress = document.getElementById("ocr-progress-bar");
@@ -100,6 +111,23 @@ export async function runAllOCR() {
   endTask();
 }
 
+function calcWeightChar(text) {
+  const weightSum = text.split("").reduce((sum, char) => {
+    if (/[ㄱ-ㅎ|가-힣]/.test(char)) return sum + charWeights.korean;
+    if (/[0-9]/.test(char)) return sum + charWeights.number;
+    if (/[a-zA-Z]/.test(char)) return sum + charWeights.alphabet;
+    if (/\s/.test(char)) return sum + charWeights.space;
+    if (/['"“”‘’`]/.test(char)) return sum + charWeights.quotes;
+    if (/[-+=_:;]/.test(char)) return sum + charWeights.wide;
+    if (/[,.]/.test(char)) return sum + charWeights.narrow;
+    if (/[()\[\]{}]/.test(char)) return sum + charWeights.parentheses;
+
+    return sum + 1;
+  }, 0);
+
+  return Number(weightSum).toFixed(2);
+}
+
 export async function runOCR(pageNum) {
   clearOcrMasks(pageNum);
 
@@ -122,15 +150,28 @@ export async function runOCR(pageNum) {
 
         while ((match = regex.exec(word)) !== null) {
           const matchedText = match[0];
-          const len = word.length;
-          const charWidth = textItem.width / len;
+          // const len = word.length;
           const matchedLen = matchedText.length;
+          const startIdx = match.index;
+          const endIdx = startIdx + matchedLen;
+          // const charWidth = textItem.width / len;
+
+          const totalWeighted = calcWeightChar(word);
+          const startWeight = calcWeightChar(word.substring(0, startIdx));
+          const matchedWeight = calcWeightChar(
+            word.substring(startIdx, endIdx)
+          );
+
+          const weightedCharWidth = textItem.width / totalWeighted;
+
+          const width = weightedCharWidth * matchedWeight;
+          const height = textItem.height;
 
           const bbox = textItem.transform;
-          const x = bbox[4] + charWidth * match.index;
-          const y = bbox[5] + textItem.height;
-          const width = charWidth * matchedLen;
-          const height = textItem.height;
+          //const x = bbox[4] + charWidth * match.index;
+          const x = bbox[4] + startWeight * weightedCharWidth;
+          const y = bbox[5] + height;
+          // const width = charWidth * matchedLen;
 
           cntPrivacy += 1;
           addMask(pageNum, {

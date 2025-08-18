@@ -78,10 +78,13 @@ export function dragEnd(event, offsetX = -1, offsetY = -1) {
     boxInfo.width = Math.abs(boxInfo.width);
     boxInfo.height = Math.abs(boxInfo.height);
 
-    if (boxInfo.width < 11 || boxInfo.height < 11) return;
-
     const pageNum = getCurrentPageNum();
     clearCanvas();
+
+    if (boxInfo.width < 11 || boxInfo.height < 11) {
+      redrawPageMasks(pageNum);
+      return;
+    }
 
     if (currentDrawingMode === "maskBox") {
       incMaskingCount();
